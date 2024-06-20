@@ -24,11 +24,10 @@ class dgMap():
         y = int(y / 32)
         (newx, newy) = self.getBounded(x + deltax, y + deltay)
         canMove = True
-        if entity.get("solid") == 1:
-            for ent in self.ents[newx][newy]:
-                if ent.get("solid") == 1:
-                    canMove = False
-                    break
+        for ent in self.ents[newx][newy]:
+            if ent.get("impassable") == 1:
+                canMove = False
+                break
         if canMove and (x, y) != (newx, newy):
             self.ents[x][y].remove(entity)
             entity.position = (newx * 32, newy * 32, 0)
@@ -53,7 +52,7 @@ class dgMap():
             (x, y, z) = entity.position
             x = int(x / 32)
             y = int(y / 32)
-            r = entity.get("vision")
+            r = int(entity.get("vision"))
 
             oMask = [[None for i in range(self.h)] for j in range(self.w)]
 

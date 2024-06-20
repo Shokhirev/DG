@@ -15,13 +15,19 @@ class Entity(pyglet.sprite.Sprite):
         self.visibleEnts = None
         self.inventory = []
 
+    def setStates(self,thestates):
+        self.states = thestates
     def set(self, key, val):
         self.states[key] = val
 
     def get(self, key):
         if key not in self.states.keys():
             return 0
-        return self.states[key]
+        try:
+            return int(self.states[key])
+        except ValueError:
+            return self.states[key]
+
 
     def setVisEnts(self, visEnts):
         self.visibleEnts = visEnts
