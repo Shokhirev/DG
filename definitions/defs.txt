@@ -1,0 +1,29 @@
+thing:
+
+wall:thing
+impassable	1
+opaque	1
+
+floor:thing
+
+grass:floor
+color	green
+
+creature:thing
+health	1
+max health	1
+ap	0
+max ap	0
+vision	1
+
+player:creature
+vision	5
+
+item:thing
+durability	1
+max durability	1
+
+equipable:item
+equipable	1
+
+robe:equipable
