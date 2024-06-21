@@ -7,16 +7,20 @@ class dgMap():
         self.w = w
         self.h = h
         self.ents = [[[] for i in range(h)] for j in range(w)]
+        self.ticking = []
 
     def addEnt(self, entity, x, y):
         self.ents[x][y].append(entity)
         entity.position = (x * 32, y * 32, 0)
+
 
     def removeEnt(self, entity):
         x, y, z = entity.position
         x = int(x / 32)
         y = int(y / 32)
         self.ents[x][y].remove(entity)
+        if entity in self.ticking:
+            self.ticking.remove(entity)
 
     def moveEnt(self, entity, deltax, deltay):
         (x, y, z) = entity.position
@@ -87,7 +91,61 @@ class dgMap():
             return list(dict.fromkeys(res))
         return visEnts
 
-
+    def getPath(self, e1, e2):
+        gs = [[math.inf for i in range(self.h)] for j in range(self.w)]
+        fs = [[math.inf for i in range(self.h)] for j in range(self.w)]
+        parent = dict()
+        (x1, y1, z) = e1.position
+        x1 = int(x1 / 32)
+        y1 = int(y1 / 32)
+        (x2, y2, z) = e2.position
+        x2 = int(x2 / 32)
+        y2 = int(y2 / 32)
+        oset = {(x1, y1)}
+        gs[x1][y1] = 0
+        fs[x1][y1] = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+        while len(oset) > 0:
+            ll = sorted(list(oset), key=lambda x: fs[x[0]][x[1]])
+            (nx, ny) = ll[0]
+            (lx, ly) = self.getBounded(nx - 1, ny - 1)
+            (hx, hy) = self.getBounded(nx + 1, ny + 1)
+            for i in range(lx, hx + 1):
+                for j in range(ly, hy + 1):
+                    if i != nx or j != ny:
+                        canMove = True
+                        for ent in self.ents[i][j]:
+                            if ent.get("impassable") == 1:
+                                canMove = False
+                        if canMove:
+                            if i == x2 and j == y2:
+                                parent[(i, j)] = (nx, ny)
+                                path = [(x2, y2)]
+                                while True:
+                                    prev = parent[path[0]]
+                                    path.insert(0, prev)
+                                    if prev[0] == x1 and prev[1] == y1:
+                                        return path
+                            tentativeg = gs[nx][ny] + ((nx - i) ** 2 + (ny - j) ** 2) ** 0.5
+                            if tentativeg < gs[i][j]:
+                                parent[(i, j)] = (nx, ny)
+                                gs[i][j] = tentativeg
+                                fs[i][j] = tentativeg + ((x2 - i) ** 2 + (y2 - j) ** 2) ** 0.5
+                                if (i, j) not in oset:
+                                    oset.add((i, j))
+            oset.remove((nx, ny))
 
     def update(self):
         self.resetEnts()
+        return self.tick()
+
+    def tick(self):
+        toAI=[]
+        for ent in self.ticking:
+            if ent.get("intelligence") > 0:
+                if ent.has('plan'):
+                    commands = ent.get("plan").split(".")
+                    if len(commands) > 0:
+                        nextC = commands[0]
+                else:
+                    toAI.append(ent)
+        return toAI

@@ -28,6 +28,8 @@ class Entity(pyglet.sprite.Sprite):
         except ValueError:
             return self.states[key]
 
+    def has(self, key):
+        return key in self.states.keys()
 
     def setVisEnts(self, visEnts):
         self.visibleEnts = visEnts
@@ -49,6 +51,7 @@ class Entity(pyglet.sprite.Sprite):
                     # switch out (todo: add logic for equip check)
                     e.set("equipped", 0)
 
+
     def draw(self):
         super().draw()
         for e in self.inventory:
@@ -56,3 +59,17 @@ class Entity(pyglet.sprite.Sprite):
                 x, y, z = self.position
                 e.update(x=x,y=y)
                 e.draw()
+
+
+
+
+    def getDescription(self):
+        description="You see: "
+        for ent in self.visibleEnts:
+            if ent.get("interesting")==1:
+                description += ent.get("name")+" "
+        description+=". Your properties are: "
+        for key in self.states.keys():
+            description+=key+"="+self.states[key]+" "
+        description+="."
+        return description

@@ -1,4 +1,5 @@
 import random
+from multiprocessing import Process
 
 import pyglet
 from pyglet.window import key
@@ -8,9 +9,12 @@ from button import button
 from Entity import Entity
 
 
+
 def getEntity(name, x, y, dgmap):
     ent = Entity(img=images[name], x=x, y=y, dgmap=dgmap)
     ent.setStates(defs[name])
+    if ent.get("ticks") == 1:
+        dgmap.ticking.append(ent)
     return ent
 
 
@@ -63,6 +67,7 @@ drawFPS = True
 imageTiles = pyglet.resource.image('tiles.png')
 imageMap = {(15, 9): "grass",
             (4, 80): "player",
+            (4, 81): "npc",
             (0, 7): "wall",
             (47, 82): "robe"}  # from top left
 images = dict()
@@ -124,6 +129,9 @@ player = getEntity(name="player", x=20, y=20, dgmap=currentMap)
 robe = getEntity2(name="robe", owner=player)
 player.take(robe)
 player.equip(robe)
+npc = getEntity(name="npc", x=10, y=10, dgmap=currentMap)
+
+
 
 
 def drawTitle():
@@ -140,13 +148,17 @@ def drawMenu():
 
 def drawGame():
     window.clear()
-    batch.draw()
     todraw = currentMap.getVisible(player)
     for ent in todraw:
         ent.draw()
+    batch.draw()
     if drawFPS:
         fps_display.draw()
 
+
+def addToAIQueue(entList):
+    for ent in entList:
+        p1 = Pool.amap(askAI,ent)
 
 @window.event
 def on_key_press(symbol, modifiers):
@@ -158,16 +170,16 @@ def on_key_press(symbol, modifiers):
             return pyglet.event.EVENT_HANDLED
         elif symbol == key.RIGHT:
             currentMap.moveEnt(player, 1, 0)
-            currentMap.update()
+            addToAIQueue(currentMap.update())
         elif symbol == key.LEFT:
             currentMap.moveEnt(player, -1, 0)
-            currentMap.update()
+            addToAIQueue(currentMap.update())
         elif symbol == key.UP:
             currentMap.moveEnt(player, 0, 1)
-            currentMap.update()
+            addToAIQueue( currentMap.update())
         elif symbol == key.DOWN:
             currentMap.moveEnt(player, 0, -1)
-            currentMap.update()
+            addToAIQueue(currentMap.update())
 
 
 @window.event
