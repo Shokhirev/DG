@@ -15,15 +15,23 @@ max health	1
 ap	0
 max ap	0
 vision	1
+interesting	1
 
 player:creature
 vision	5
 
+npc:creature
+vision	5
+intelligence	100
+ticks	1
+
 item:thing
 durability	1
 max durability	1
+interesting	1
 
 equipable:item
 equipable	1
 
 robe:equipable
+slot: body
