@@ -1,7 +1,8 @@
 import random
-from multiprocessing import Process
 
+import languagemodels as lm
 import pyglet
+
 from pyglet.window import key
 
 from Map import dgMap
@@ -123,15 +124,11 @@ batch = pyglet.graphics.Batch()  # for particle effects and other shiz that we d
 maps = generateMaps(1)
 currentMap = maps[0]
 
-
-
 player = getEntity(name="player", x=20, y=20, dgmap=currentMap)
 robe = getEntity2(name="robe", owner=player)
 player.take(robe)
 player.equip(robe)
 npc = getEntity(name="npc", x=10, y=10, dgmap=currentMap)
-
-
 
 
 def drawTitle():
@@ -156,9 +153,18 @@ def drawGame():
         fps_display.draw()
 
 
+
 def addToAIQueue(entList):
     for ent in entList:
-        p1 = Pool.amap(askAI,ent)
+        entdesc = ent.getDescription()
+        desc = "You are a character in a 2D game. " + entdesc + " Please respond in one "
+        "or two sentences describing what would like to do next only. Do not justify or elaborate. "
+        "You can only use one verb. You can only use one noun or two nouns. Your possible verbs are 'move' to an "
+        "object you see, 'equip' or 'unequip' an object in your inventory, 'use' an object that's equipped or "
+        "useable, 'patrol', or 'rest'."
+        res = lm.do(desc)
+        print(res)
+
 
 @window.event
 def on_key_press(symbol, modifiers):
@@ -176,7 +182,7 @@ def on_key_press(symbol, modifiers):
             addToAIQueue(currentMap.update())
         elif symbol == key.UP:
             currentMap.moveEnt(player, 0, 1)
-            addToAIQueue( currentMap.update())
+            addToAIQueue(currentMap.update())
         elif symbol == key.DOWN:
             currentMap.moveEnt(player, 0, -1)
             addToAIQueue(currentMap.update())

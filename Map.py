@@ -41,10 +41,8 @@ class dgMap():
             return 1
 
     def resetEnts(self):
-        for i in range(self.w):
-            for j in range(self.h):
-                for e in self.ents[i][j]:
-                    e.setVisEnts(None)
+        for ent in self.ticking:
+            ent.setVisEnts(None)
 
     def getBounded(self, x, y):
         return (round(min(self.w - 1, max(0, x))), round(min(self.h - 1, max(0, y))))

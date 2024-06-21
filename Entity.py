@@ -64,10 +64,16 @@ class Entity(pyglet.sprite.Sprite):
 
 
     def getDescription(self):
-        description="You see: "
-        for ent in self.visibleEnts:
-            if ent.get("interesting")==1:
-                description += ent.get("name")+" "
+        description="You see:"
+        for ent in self.dgmap.getVisible(self):
+            if not ent == self and ent.get("interesting")==1:
+                nick=ent.get("nickname")
+                if nick is not 0:
+                    description += " "+ ent.get("name")+" named "+nick
+                else:
+                    description += " "+ent.get("name")
+        if description == "You see:":
+            description += " nothing of interest near you"
         description+=". Your properties are: "
         for key in self.states.keys():
             description+=key+"="+self.states[key]+" "
