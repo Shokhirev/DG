@@ -1,3 +1,4 @@
+import random
 import sys
 
 import pyglet
@@ -62,6 +63,31 @@ class Entity(pyglet.sprite.Sprite):
                 x, y, z = self.position
                 e.update(x=x, y=y)
                 e.draw()
+
+    def attack(self,target):
+        damage = 1
+        for e in self.inventory:
+            if e.get("equipped") == 1:
+                damage += random.randint(e.get("min damage"),e.get("max damage"))
+        target.set("health",target.get("health")-damage)
+        if target.get("health")<=0:
+            target.set("ticks", 0)
+            target.dropLoot()
+        target.bleed()
+
+    def bleed(self):
+        (x, y, z) = self.position
+        self.dgmap.addEntByName("blood", int(x / 32), int(y / 32))
+
+
+    def getOpinion(self,ent):
+        return -10
+    def dropLoot(self):
+        for e in self.inventory:
+            if random.randint(100) < 10:
+                (x,y,z) = self.position
+                self.dgmap.addEnt(e,int(x/32),int(y/32))
+                e.set("equipped", 0)
 
 
     def describeSelf(self):

@@ -18,18 +18,20 @@ vision	1
 interesting	1
 
 player:creature
-vision	5
+vision	6
 ticks	1
 
 npc:creature
-vision	5
+vision	6
 intelligence	100
 ticks	1
+can carry	5
 
 item:thing
 durability	5
 max durability	5
 interesting	1
+carryable	1
 
 equipable:item
 equipable	1
@@ -41,3 +43,7 @@ sword:equipable
 slot:	hand
 minimum damage:	3
 maximum damage:	6
+
+health potion:item
+useable	1
+causes	health+5

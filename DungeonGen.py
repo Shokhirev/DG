@@ -14,20 +14,77 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 lm.config["device"] = "auto"
 lm.config["max_ram"] = "8gb"
 
+class game:
+    def __init__(self):
+        imageTiles = pyglet.resource.image('tiles.png')
+        imageMap = {(15, 9): "grass",
+                    (4, 80): "player",
+                    (4, 81): "npc",
+                    (0, 7): "wall",
+                    (30, 46): "sword",
+                    (9, 41): "blood",
+                    (47, 82): "robe"}  # from top left
+        self.images = dict()
+        for k, v in imageMap.items():
+            (x, y) = k
+            subImg = imageTiles.get_region(x * 32, (94 - y) * 32, 32, 32)
+            self.images[v] = subImg
 
-def getEntity(name, x, y, dgmap):
-    ent = Entity(img=images[name], x=x, y=y, dgmap=dgmap)
-    ent.setStates(defs[name])
-    if ent.get("ticks") == 1:
-        dgmap.ticking.append(ent)
-    return ent
+        defsFile = pyglet.resource.file('defs.txt')
+        self.defs = dict()
+        cdef = dict()
+        while True:
+            line = defsFile.readline()
+            if not line:
+                break
+            line = str(line).split('\\r')[0].split('b\'')[1]
+
+            if ":" in line:
+                split = line.split(':')
+                if len(cdef) > 0:
+                    self.defs[cdef['name']] = cdef
+                cdef = dict()
+                # assume the type is already in the defs
+                if len(split[1]) > 0 and split[1] in self.defs.keys():
+                    cdef.update(self.defs[split[1]])
+                cdef['name'] = split[0]
+                cdef['type'] = split[1]
+            else:
+                if "\\t" in line:
+                    split = line.split('\\t')
+                    cdef[split[0]] = split[1]
+
+        self.defs[cdef['name']] = cdef  # put the last
+        ###maps
+        self.maps = self.generateMaps(1)
+        self.currentMap=self.maps[0]
+
+    def generateMaps(self, param):
+        res = dict()
+        for i in range(param):
+            m = dgMap(self, w=40, h=22)
+            for x in range(m.w):
+                for y in range(m.h):
+                    grass = self.getEntity(name="grass", dgmap=m, x=x, y=y)
+                    r = random.randint(0, 100)
+                    if r < 20:
+                        wall = self.getEntity(name="wall", dgmap=m, x=x, y=y)
+            res[i] = m
+        return res
+
+    def getEntity(self, name, x, y, dgmap):
+        ent = Entity(img=self.images[name], x=x, y=y, dgmap=dgmap)
+        ent.setStates(self.defs[name])
+        if ent.get("ticks") == 1:
+            dgmap.ticking.append(ent)
+        return ent
 
 
-def getEntity2(name, owner):
-    ent = Entity(img=images[name])
-    ent.setStates(defs[name])
-    owner.inventory.append(ent)
-    return ent
+    def getEntity2(self,name, owner):
+        ent = Entity(img=self.images[name])
+        ent.setStates(self.defs[name])
+        owner.inventory.append(ent)
+        return ent
 
 
 # Pyglet stuff
@@ -68,76 +125,21 @@ start_b = start_btn(label="Start", x=window.width // 2, y=200, w=200, h=50)
 exit_b = exit_btn(label="Exit", x=window.width // 2, y=100, w=200, h=50)
 
 # Game stuff
+dg = game()
 window.state = 0  # 0=title, 1=menu, 2=game
 drawFPS = True
 
-imageTiles = pyglet.resource.image('tiles.png')
-imageMap = {(15, 9): "grass",
-            (4, 80): "player",
-            (4, 81): "npc",
-            (0, 7): "wall",
-            (30, 46): "sword",
-            (47, 82): "robe"}  # from top left
-images = dict()
-for k, v in imageMap.items():
-    (x, y) = k
-    subImg = imageTiles.get_region(x * 32, (94 - y) * 32, 32, 32)
-    images[v] = subImg
-
-defsFile = pyglet.resource.file('defs.txt')
-defs = dict()
-cdef = dict()
-while True:
-    line = defsFile.readline()
-    if not line:
-        break
-    line = str(line).split('\\r')[0].split('b\'')[1]
-
-    if ":" in line:
-        split = line.split(':')
-        if len(cdef) > 0:
-            defs[cdef['name']] = cdef
-        cdef = dict()
-        # assume the type is already in the defs
-        if len(split[1]) > 0 and split[1] in defs.keys():
-            cdef.update(defs[split[1]])
-        cdef['name'] = split[0]
-        cdef['type'] = split[1]
-    else:
-        if "\\t" in line:
-            split = line.split('\\t')
-            cdef[split[0]] = split[1]
-
-defs[cdef['name']] = cdef  # put the last
-
-
-# Maps
-def generateMaps(param):
-    res = dict()
-    for i in range(param):
-        m = dgMap(w=40, h=22)
-        for x in range(m.w):
-            for y in range(m.h):
-                grass = getEntity(name="grass", dgmap=m, x=x, y=y)
-                r = random.randint(0, 100)
-                if r < 20:
-                    wall = getEntity(name="wall", dgmap=m, x=x, y=y)
-        res[i] = m
-    return res
-
-
 # Logic
 batch = pyglet.graphics.Batch()  # for particle effects and other shiz that we don't need logic for.
-maps = generateMaps(1)
-currentMap = maps[0]
+currentMap = dg.currentMap
 
-player = getEntity(name="player", x=20, y=20, dgmap=currentMap)
-robe = getEntity2(name="robe", owner=player)
+player = dg.getEntity(name="player", x=20, y=20, dgmap=currentMap)
+robe = dg.getEntity2(name="robe", owner=player)
 player.inventory.append(robe)
 player.equip(robe)
-npc = getEntity(name="npc", x=18, y=18, dgmap=currentMap)
+npc = dg.getEntity(name="npc", x=18, y=18, dgmap=currentMap)
 
-sword = getEntity(name="sword", x=17, y=17, dgmap=currentMap)
+sword = dg.getEntity(name="sword", x=17, y=17, dgmap=currentMap)
 
 
 def drawTitle():
@@ -191,10 +193,10 @@ def addToAIQueue(entList):
             description += "Nothing of value."
         description += ". You are " + smart.describeSelf()
         desc = "You are a character in a 2D game." + description + " Using only one verb and one noun, describe what you would like to do next." \
-                                                                   "Possible verbs are 'go to' 'get' 'drop' 'equip' 'unequip' and 'rest'. You can walk to things within sight, you can get things within reach, you can equip and unequip things you have."
-        options = []
+                                                                   "You can go to things within sight, you can get, attack, or help things within reach, you can equip and unequip things you have."
+        options = ["wander"]
         targets = dict()
-
+        targets["wander"]=None
         for item in smart.inventory:
             if item.has("useable"):
                 options.append("use " + item.get("name"))
@@ -214,8 +216,15 @@ def addToAIQueue(entList):
                     options.append("go to " + ent.get("name"))
                     targets[options[-1]] = ent
                 else:
-                    options.append("get " + ent.get("name"))
-                    targets[options[-1]] = ent
+                    if ent.has("carryable") and ent.get("carryable") == 1:
+                        options.append("get " + ent.get("name"))
+                        targets[options[-1]] = ent
+                    elif smart.getOpinion(ent) < -5:
+                        options.append("attack "+ent.get("name"))
+                        targets[options[-1]] = ent
+                    elif smart.getOpinion(ent) > 5:
+                        options.append("help "+ent.get("name"))
+                        targets[options[-1]] = ent
         print(desc)
         print(options)
         res = lm.do(prompt=desc, choices=options)

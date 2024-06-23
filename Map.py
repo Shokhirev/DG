@@ -1,18 +1,23 @@
 import math
+import random
 
 
 class dgMap():
 
-    def __init__(self, w=30, h=24):
+    def __init__(self, game, w=30, h=24):
         self.w = w
         self.h = h
         self.ents = [[[] for i in range(h)] for j in range(w)]
         self.ticking = []
+        self.game = game
+
+
+    def addEntByName(self,name, x, y):
+        self.game.getEntity(name,x,y,self)
 
     def addEnt(self, entity, x, y):
         self.ents[x][y].append(entity)
         entity.position = (x * 32, y * 32, 0)
-
 
     def removeEnt(self, entity):
         x, y, z = entity.position
@@ -36,9 +41,9 @@ class dgMap():
             self.ents[x][y].remove(entity)
             entity.position = (newx * 32, newy * 32, 0)
             self.ents[newx][newy].append(entity)
-            return 0
+            return True
         else:
-            return 1
+            return False
 
     def resetEnts(self):
         for ent in self.ticking:
@@ -137,12 +142,12 @@ class dgMap():
         return self.tick()
 
     def transfer(self, target, owner):
-        #checks for ability to transfer. For now assume yes and that target was on map
+        # checks for ability to transfer. For now assume yes and that target was on map
         owner.inventory.append(target)
         self.removeEnt(target)
 
     def tick(self):
-        toAI=[]
+        toAI = []
         for ent in self.ticking:
             if ent.get("intelligence") > 0:
                 completed = False
@@ -158,13 +163,24 @@ class dgMap():
                     elif "go to" in plan:
                         target = ent.get("plan target")
                         if not isinstance(target, int):
-                            path = self.getPath(e1 = ent, e2 = target)
-                            (nx,ny) = path[0]
-                            (x1, y1, z) = ent.position
-                            x1 = int(x1 / 32)
-                            y1 = int(y1 / 32)
-                            self.moveEnt(ent,nx-x1,ny-y1)
-                            completed = True
+                            if hasattr(ent,"path") and len(ent.path) > 0 :
+                                (nx, ny) = ent.path.pop(0)
+                                (x1, y1, z) = ent.position
+                                x1 = int(x1 / 32)
+                                y1 = int(y1 / 32)
+                                self.moveEnt(ent, nx - x1, ny - y1)
+                                if len(ent.path) == 0:
+                                    completed = True
+                            else:
+                                ent.path = self.getPath(e1=ent, e2=target)
+                                (nx, ny) = ent.path.pop(0)
+                                (x1, y1, z) = ent.position
+                                x1 = int(x1 / 32)
+                                y1 = int(y1 / 32)
+                                self.moveEnt(ent, nx - x1, ny - y1)
+                                if len(ent.path) == 0:
+                                    completed = True
+
                     elif "unequip" in plan:
                         target = ent.get("plan target")
                         if not isinstance(target, int):
@@ -174,6 +190,38 @@ class dgMap():
                         target = ent.get("plan target")
                         if not isinstance(target, int):
                             ent.equip(target)
+                            completed = True
+                    elif "attack" in plan:
+                        target = ent.get("plan target")
+                        if not isinstance(target, int):
+                            ent.attack(target)
+                            completed = True
+                    elif "help" in plan:
+                        target = ent.get("plan target")
+                        if not isinstance(target, int):
+                            ent.help(target)
+                            completed = True
+                    elif "wander" in plan:
+                        if hasattr(ent,"path") and len(ent.path) > 0 :
+                            (nx, ny) = ent.path.pop(0)
+                            (x1, y1, z) = ent.position
+                            x1 = int(x1 / 32)
+                            y1 = int(y1 / 32)
+                            if not self.moveEnt(ent, nx - x1, ny - y1):
+                                completed = True
+                        else:
+                            visibleEnts=self.getVisible(ent)
+                            ent.path = self.getPath(ent,visibleEnts[random.randint(0,len(visibleEnts))])
+                            if len(ent.path) > 0:
+                                (nx, ny) = ent.path.pop(0)
+                                (x1, y1, z) = ent.position
+                                x1 = int(x1 / 32)
+                                y1 = int(y1 / 32)
+                                if not self.moveEnt(ent, nx - x1, ny - y1):
+                                    completed = True
+                            else:
+                                completed = True
+                        if len(ent.path) == 0:
                             completed = True
                     if completed:
                         toAI.append(ent)
