@@ -7,18 +7,19 @@ opaque	1
 floor:thing
 
 grass:floor
-color	green
+flammable	1
 
 creature:thing
-health	1
-max health	1
-ap	0
-max ap	0
+health	10
+max health	10
+action points	1
+max action points	1
 vision	1
 interesting	1
 
 player:creature
 vision	5
+ticks	1
 
 npc:creature
 vision	5
@@ -26,12 +27,17 @@ intelligence	100
 ticks	1
 
 item:thing
-durability	1
-max durability	1
+durability	5
+max durability	5
 interesting	1
 
 equipable:item
 equipable	1
 
 robe:equipable
-slot: body
+slot:	body
+
+sword:equipable
+slot:	hand
+minimum damage:	3
+maximum damage:	6

@@ -136,14 +136,47 @@ class dgMap():
         self.resetEnts()
         return self.tick()
 
+    def transfer(self, target, owner):
+        #checks for ability to transfer. For now assume yes and that target was on map
+        owner.inventory.append(target)
+        self.removeEnt(target)
+
     def tick(self):
         toAI=[]
         for ent in self.ticking:
             if ent.get("intelligence") > 0:
+                completed = False
                 if ent.has('plan'):
-                    commands = ent.get("plan").split(".")
-                    if len(commands) > 0:
-                        nextC = commands[0]
+                    plan = ent.get("plan")
+                    if "get" in plan:
+                        target = ent.get("plan target")
+                        if not isinstance(target, int):
+                            d = ent.distanceTo(target)
+                            if d < 1.5:
+                                self.transfer(target, ent)
+                                completed = True
+                    elif "go to" in plan:
+                        target = ent.get("plan target")
+                        if not isinstance(target, int):
+                            path = self.getPath(e1 = ent, e2 = target)
+                            (nx,ny) = path[0]
+                            (x1, y1, z) = ent.position
+                            x1 = int(x1 / 32)
+                            y1 = int(y1 / 32)
+                            self.moveEnt(ent,nx-x1,ny-y1)
+                            completed = True
+                    elif "unequip" in plan:
+                        target = ent.get("plan target")
+                        if not isinstance(target, int):
+                            target.set("equipped", 0)
+                            completed = True
+                    elif "equip" in plan:
+                        target = ent.get("plan target")
+                        if not isinstance(target, int):
+                            ent.equip(target)
+                            completed = True
+                    if completed:
+                        toAI.append(ent)
                 else:
                     toAI.append(ent)
         return toAI
