@@ -125,9 +125,10 @@ class dgMap():
                                 path = [(x2, y2)]
                                 while True:
                                     prev = parent[path[0]]
-                                    path.insert(0, prev)
                                     if prev[0] == x1 and prev[1] == y1:
                                         return path
+                                    else:
+                                        path.insert(0, prev)
                             tentativeg = gs[nx][ny] + ((nx - i) ** 2 + (ny - j) ** 2) ** 0.5
                             if tentativeg < gs[i][j]:
                                 parent[(i, j)] = (nx, ny)
@@ -202,7 +203,7 @@ class dgMap():
                             ent.help(target)
                             completed = True
                     elif "wander" in plan:
-                        if hasattr(ent,"path") and len(ent.path) > 0 :
+                        if hasattr(ent,"path") and ent.path is not None and len(ent.path) > 0 :
                             (nx, ny) = ent.path.pop(0)
                             (x1, y1, z) = ent.position
                             x1 = int(x1 / 32)
@@ -211,8 +212,8 @@ class dgMap():
                                 completed = True
                         else:
                             visibleEnts=self.getVisible(ent)
-                            ent.path = self.getPath(ent,visibleEnts[random.randint(0,len(visibleEnts))])
-                            if len(ent.path) > 0:
+                            ent.path = self.getPath(ent,visibleEnts[random.randint(0,len(visibleEnts)-1)])
+                            if ent.path is not None and len(ent.path) > 0:
                                 (nx, ny) = ent.path.pop(0)
                                 (x1, y1, z) = ent.position
                                 x1 = int(x1 / 32)
@@ -221,7 +222,7 @@ class dgMap():
                                     completed = True
                             else:
                                 completed = True
-                        if len(ent.path) == 0:
+                        if ent.path is not None or len(ent.path) == 0:
                             completed = True
                     if completed:
                         toAI.append(ent)

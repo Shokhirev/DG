@@ -9,6 +9,9 @@ floor:thing
 grass:floor
 flammable	1
 
+blood:thing
+wet	1
+
 creature:thing
 health	10
 max health	10
@@ -16,16 +19,25 @@ action points	1
 max action points	1
 vision	1
 interesting	1
+ticks	1
 
 player:creature
 vision	6
-ticks	1
+alignment	0
 
 npc:creature
 vision	6
+
+monster:creature
+alignment	-100
+
+goblin:monster
+health	5
+max health	5
 intelligence	100
-ticks	1
 can carry	5
+vision	5
+
 
 item:thing
 durability	5
@@ -37,12 +49,12 @@ equipable:item
 equipable	1
 
 robe:equipable
-slot:	body
+slot	body
 
 sword:equipable
-slot:	hand
-minimum damage:	3
-maximum damage:	6
+slot	hand
+min damage	2
+max damage	4
 
 health potion:item
 useable	1

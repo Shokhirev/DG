@@ -70,6 +70,7 @@ class Entity(pyglet.sprite.Sprite):
             if e.get("equipped") == 1:
                 damage += random.randint(e.get("min damage"),e.get("max damage"))
         target.set("health",target.get("health")-damage)
+        print(f'{self.get("name")} attacked {target.get("name")} doing {damage} damage. Health left: {target.get("health")}!')
         if target.get("health")<=0:
             target.set("ticks", 0)
             target.dropLoot()
@@ -81,10 +82,13 @@ class Entity(pyglet.sprite.Sprite):
 
 
     def getOpinion(self,ent):
-        return -10
+        if self.has("alignment") and ent.has("alignment"):
+            return abs(self.get("alignment")-ent.get("alignment"))
+        else:
+            return 50
     def dropLoot(self):
         for e in self.inventory:
-            if random.randint(100) < 10:
+            if random.randint(0,100) < 10:
                 (x,y,z) = self.position
                 self.dgmap.addEnt(e,int(x/32),int(y/32))
                 e.set("equipped", 0)
@@ -93,7 +97,7 @@ class Entity(pyglet.sprite.Sprite):
     def describeSelf(self):
         desc="A"
         if self.has("durability"):
-            ratio = self.get("durability")/self.get("max durability")
+            ratio = 100*self.get("durability")/self.get("max durability")
             temp=""
             if ratio < 75:
                 temp=" cracked"
@@ -103,7 +107,7 @@ class Entity(pyglet.sprite.Sprite):
                 temp=" broken"
             desc+=temp
         if self.has("health"):
-            ratio = self.get("health")/self.get("max health")
+            ratio = 100*self.get("health")/self.get("max health")
             temp=" healthy"
             if ratio < 75:
                 temp=" hurt"
@@ -113,7 +117,7 @@ class Entity(pyglet.sprite.Sprite):
                 temp=" dying"
             desc+=temp
         if self.has("action points"):
-            ratio = self.get("action points")/self.get("max action points")
+            ratio = 100*self.get("action points")/self.get("max action points")
             temp=" energetic"
             if ratio < 75:
                 temp=" winded"
