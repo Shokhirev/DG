@@ -51,11 +51,16 @@ equipable	1
 robe:equipable
 slot	body
 
-sword:equipable
+weapon:equipable
 slot	hand
-min damage	2
-max damage	4
+causes	health
+
+sword:weapon
+min health	-1
+max health	-5
 
 health potion:item
 useable	1
-causes	health+5
+causes	health
+min health	5
+max health	10

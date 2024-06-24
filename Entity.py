@@ -64,6 +64,22 @@ class Entity(pyglet.sprite.Sprite):
                 e.update(x=x, y=y)
                 e.draw()
 
+    def use(self,item,target):
+        for key in item.states:
+            if "causes" in key:
+                sp = key.split(" ")
+                what = sp[1]
+                min = item.get("min "+what)
+                max = item.get("max " + what)
+                val = random.randint(min,max)
+                target.set(what,target.get(what)+val)
+                if val > 0:
+                    target.bleed()
+
+        if target.get("health")<=0:
+            target.set("ticks", 0)
+            target.dropLoot()
+
     def attack(self,target):
         damage = 1
         for e in self.inventory:
@@ -71,10 +87,7 @@ class Entity(pyglet.sprite.Sprite):
                 damage += random.randint(e.get("min damage"),e.get("max damage"))
         target.set("health",target.get("health")-damage)
         print(f'{self.get("name")} attacked {target.get("name")} doing {damage} damage. Health left: {target.get("health")}!')
-        if target.get("health")<=0:
-            target.set("ticks", 0)
-            target.dropLoot()
-        target.bleed()
+
 
     def bleed(self):
         (x, y, z) = self.position

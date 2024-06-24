@@ -106,6 +106,7 @@ class game:
         for smart in entList:
             nearbyEnts = dg.currentMap.getVisible(smart)
             items = []
+            things = []
             description = "You see:"
             for ent in nearbyEnts:
                 if not ent == smart and ent.get("interesting") == 1:
@@ -129,7 +130,8 @@ class game:
                     if ent.distanceTo(smart) < 1.5:
                         description += " within reach. "
                     else:
-                        description += " within sight. "
+                        description += " far away. "
+                    things.append(ent)
             if description == "You see:":
                 description += " nothing of interest near you. "
             description += "You have: "
@@ -139,22 +141,23 @@ class game:
             if len(smart.inventory) == 0:
                 description += "Nothing of value."
             description += ". You are " + smart.describeSelf()
-            desc = "You are a character in a 2D game." + description + "Using only one verb and one noun, describe what " \
-                                                                       "you would like to do next." \
-                                                                       "You can go to things within sight, you can get, " \
-                                                                       "attack, or help things within reach, " \
-                                                                       "you can equip things you have. You should " \
+            desc = "You are a character in a 2D game." + description + "Select what you would like to do next using a simple sentence. " \
+                                                                       "You can go to things that are not near. You can use things you have. " \
+                                                                       "You can equip things you have. You should " \
                                                                        "equip before you move, help, or attack. If " \
                                                                        "you think you will survive, you should attack " \
                                                                        "those you dislike and try helping those you " \
-                                                                       "like. "
+                                                                       "like. You should try to pick up and keep things that might be of value. "
             options = ["wander"]
             targets = dict()
             targets["wander"] = None
             for item in smart.inventory:
-                if item.has("useable"):
-                    options.append("use " + item.get("name"))
-                    targets[options[-1]] = item
+                if item.has("useable") or (item.has("equipable") and item.get("equipped")==1):
+                    options.append("use " + item.get("name")+" on yourself")
+                    targets[options[-1]] = (item, smart)
+                    for thing in things:
+                        options.append("use " + item.get("name") + " on "+thing.get("name"))
+                        targets[options[-1]] = (item, thing)
                 if item.has("equipable"):
                     if item.get("equipped") == 0:
                         options.append("equip " + item.get("name"))
@@ -172,12 +175,6 @@ class game:
                     else:
                         if ent.has("carryable") and ent.get("carryable") == 1:
                             options.append("get " + ent.get("name"))
-                            targets[options[-1]] = ent
-                        elif smart.getOpinion(ent) > 80:
-                            options.append("attack " + ent.get("name"))
-                            targets[options[-1]] = ent
-                        elif smart.getOpinion(ent) < 50:
-                            options.append("help " + ent.get("name"))
                             targets[options[-1]] = ent
             print(desc)
             print(options)

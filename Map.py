@@ -164,7 +164,7 @@ class dgMap():
                     elif "go to" in plan:
                         target = ent.get("plan target")
                         if not isinstance(target, int):
-                            if hasattr(ent,"path") and len(ent.path) > 0 :
+                            if hasattr(ent,"path") and ent.path is not None and len(ent.path) > 0 :
                                 (nx, ny) = ent.path.pop(0)
                                 (x1, y1, z) = ent.position
                                 x1 = int(x1 / 32)
@@ -192,16 +192,12 @@ class dgMap():
                         if not isinstance(target, int):
                             ent.equip(target)
                             completed = True
-                    elif "attack" in plan:
-                        target = ent.get("plan target")
-                        if not isinstance(target, int):
-                            ent.attack(target)
-                            completed = True
-                    elif "help" in plan:
-                        target = ent.get("plan target")
-                        if not isinstance(target, int):
-                            ent.help(target)
-                            completed = True
+                    elif "use" in plan:
+                        try:
+                            (item,target) = ent.get("plan target")
+                            ent.use(item,target)
+                        except:
+                            pass
                     elif "wander" in plan:
                         if hasattr(ent,"path") and ent.path is not None and len(ent.path) > 0 :
                             (nx, ny) = ent.path.pop(0)
@@ -222,7 +218,7 @@ class dgMap():
                                     completed = True
                             else:
                                 completed = True
-                        if ent.path is not None or len(ent.path) == 0:
+                        if ent.path is None or (ent.path is not None and len(ent.path) == 0):
                             completed = True
                     if completed:
                         toAI.append(ent)
