@@ -196,6 +196,7 @@ class dgMap():
                         try:
                             (item,target) = ent.get("plan target")
                             ent.use(item,target)
+                            completed =True
                         except:
                             pass
                     elif "wander" in plan:

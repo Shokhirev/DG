@@ -147,7 +147,9 @@ class game:
                                                                        "equip before you move, help, or attack. If " \
                                                                        "you think you will survive, you should attack " \
                                                                        "those you dislike and try helping those you " \
-                                                                       "like. You should try to pick up and keep things that might be of value. "
+                                                                       "like. You should try to pick up and keep " \
+                                                                       "things that might be of value. You should " \
+                                                                       "only use things that make sense. "
             options = ["wander"]
             targets = dict()
             targets["wander"] = None
@@ -156,8 +158,11 @@ class game:
                     options.append("use " + item.get("name")+" on yourself")
                     targets[options[-1]] = (item, smart)
                     for thing in things:
-                        options.append("use " + item.get("name") + " on "+thing.get("name"))
-                        targets[options[-1]] = (item, thing)
+                        userange = float(item.get("use range"))
+                        dist=smart.distanceTo(thing)
+                        if dist <= userange:
+                            options.append("use " + item.get("name") + " on "+thing.get("name"))
+                            targets[options[-1]] = (item, thing)
                 if item.has("equipable"):
                     if item.get("equipped") == 0:
                         options.append("equip " + item.get("name"))
@@ -224,6 +229,9 @@ subtitle = pyglet.text.Label("An AI dungeon by Max Shok 2024", font_name="Calibr
 
 death = pyglet.text.Label("You Died!", font_name="Calibri", font_size=80, x=window.width // 2, y=window.height // 2,
                           anchor_x="center",color=(200,50,50,200))
+
+health = pyglet.text.Label("HP:10/10", font_name="Calibri", font_size=20, x=50, y=window.height - 50,
+                          anchor_x="center",color=(200,50,50,200))
 # Buttons
 class start_btn(button):
     def clicked(self):
@@ -268,6 +276,8 @@ def drawGame():
     for ent in todraw:
         ent.draw()
     batch.draw()
+    health.text=f'HP:{dg.player.get("health")}/{dg.player.get("max health")}'
+    health.draw()
     if drawFPS:
         fps_display.draw()
 

@@ -53,14 +53,15 @@ slot	body
 
 weapon:equipable
 slot	hand
-causes	health
+causes health	-1
 
 sword:weapon
-min health	-1
-max health	-5
+min health	1
+max health	5
+use range	1.5
 
 health potion:item
-useable	1
-causes	health
+use range	1.5	
+causes health	1
 min health	5
 max health	10
