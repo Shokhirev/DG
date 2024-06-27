@@ -10,6 +10,8 @@ class dgMap():
         self.ents = [[[] for i in range(h)] for j in range(w)]
         self.ticking = []
         self.game = game
+        self.name = ""
+        self.description=""
 
 
     def addEntByName(self,name, x, y):

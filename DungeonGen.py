@@ -13,7 +13,9 @@ import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 lm.config["device"] = "auto"
 lm.config["max_ram"] = "8gb"
-
+lm.config["max_tokens"] = "100"
+#lm.config["instruct_model"]= 'Phi-3-mini-4k-instruct'
+print(lm.config)
 
 class game:
     def __init__(self):
@@ -61,7 +63,7 @@ class game:
 
 
     def genGame(self):
-        self.maps = self.generateMaps(1)
+        self.maps = self.generateMaps(3)
         self.currentMap = self.maps[0]
         self.player = dg.getEntity(name="player", x=20, y=20, dgmap=self.currentMap)
         robe = dg.getEntity2(name="robe", owner=self.player)
@@ -72,8 +74,21 @@ class game:
 
     def generateMaps(self, param):
         res = dict()
+        lm.config["max_tokens"]=300
+        keywords=["dark","dungeon","tomb","magic","mystery","bones","king","power"]
+        desc=f'You are descending into a fantasy dungeon. There are {param} levels. The levels progress in difficulty as you go from one to the next and are all thematically linked. Two keywords to incorporate: {random.choice(keywords)} and {random.choice(keywords)}'
         for i in range(param):
+            area=lm.do(desc+f" Please describe area {i+1} in a few sentences. Do not name it yet.")
+            print(area)
+            area_name=lm.do(f'Description: {area}. In a word or two please name this area.')
+            print(area_name)
+            desc+=area_name+":\n"+area
             m = dgMap(self, w=40, h=22)
+            m.name=area_name
+            m.description=desc
+            #textmap= (' '*m.w + "\n")*m.h
+            #print(lm.do("Please fill in the following map with ASCII characters. '#' is a wall. ' ' is empty. '@' is a monster. '$' is a treasure or item.:\n"+textmap))
+
             for x in range(m.w):
                 for y in range(m.h):
                     grass = self.getEntity(name="grass", dgmap=m, x=x, y=y)
@@ -81,6 +96,7 @@ class game:
                     if r < 20:
                         wall = self.getEntity(name="wall", dgmap=m, x=x, y=y)
             res[i] = m
+        lm.config["max_tokens"] = 100
         return res
 
     def getEntity(self, name, x, y, dgmap):
@@ -89,7 +105,11 @@ class game:
         if ent.get("ticks") == 1:
             dgmap.ticking.append(ent)
         if ent.has("intelligence"):
-            ent.set("nickname",lm.do(f'Generate a name for a {ent.get("name")} whose favorite number is {random.randint(0,100)}'))
+            desc=ent.describeSelf()
+            keywords=dgmap.description.split(" ")
+            keywords.remove("and")
+            keywords.remove("the")
+            ent.set("nickname",lm.do(f'Generate a {ent.get("name")} name that is from {dgmap.name} and keyword {random.choice(keywords)}. Your answer should only have two words.'))
             print(ent.get("nickname"))
         return ent
 
@@ -112,10 +132,11 @@ class game:
                 if not ent == smart and ent.get("interesting") == 1:
                     nick = ent.get("nickname")
                     statement = ent.get("saying")
-                    if isinstance(nick, str):
-                        description += " A " + ent.get("name") + " named " + nick
-                    else:
-                        description += " A " + ent.get("name")
+#                    if isinstance(nick, str):
+#                        description += " A " + ent.get("name")+nick
+#                    else:
+#                        description += " A " + ent.get("name")
+                    description+=ent.describeSelf()
                     opinion = smart.getOpinion(ent)
                     if opinion < 10:
                         description += " that you love"
@@ -230,8 +251,12 @@ subtitle = pyglet.text.Label("An AI dungeon by Max Shok 2024", font_name="Calibr
 death = pyglet.text.Label("You Died!", font_name="Calibri", font_size=80, x=window.width // 2, y=window.height // 2,
                           anchor_x="center",color=(200,50,50,200))
 
-health = pyglet.text.Label("HP:10/10", font_name="Calibri", font_size=20, x=50, y=window.height - 50,
-                          anchor_x="center",color=(200,50,50,200))
+health = pyglet.text.Label("HP:10/10", font_name="Calibri", font_size=20, x=5, y=window.height - 20,
+                          anchor_x="left",color=(200,50,50,200))
+energy = pyglet.text.Label("AP:1/1", font_name="Calibri", font_size=20, x=5, y=window.height - 40,
+                          anchor_x="left",color=(50,50,220,200))
+mapname = pyglet.text.Label("Map", font_name="Calibri", font_size=18, x=window.width-5, y=window.height - 25,
+                          anchor_x="right",color=(150,150,150,200))
 # Buttons
 class start_btn(button):
     def clicked(self):
@@ -278,6 +303,10 @@ def drawGame():
     batch.draw()
     health.text=f'HP:{dg.player.get("health")}/{dg.player.get("max health")}'
     health.draw()
+    energy.text=f'AP:{dg.player.get("action points")}/{dg.player.get("max action points")}'
+    energy.draw()
+    mapname.text=dg.currentMap.name
+    mapname.draw()
     if drawFPS:
         fps_display.draw()
 
